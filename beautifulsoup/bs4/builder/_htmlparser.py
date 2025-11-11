@@ -172,6 +172,20 @@ class BeautifulSoupHTMLParser(HTMLParser, DetectsXMLParsedAsHTML):
                     on_dupe(attr_dict, key, value)
             else:
                 attr_dict[key] = value
+        # SoupReplacer hook (Milestone 3)
+        if hasattr(self.soup, "replacer") and self.soup.replacer:
+            replacer = self.soup.replacer
+
+            # Construct a lightweight tag-like object so transformers can read/write it
+            dummy_tag = type("DummyTag", (), {"name": name, "attrs": dict(attr_dict)})()
+            replacer.transform_tag(dummy_tag)
+
+            # Update tag name and attrs based on replacement/transformer
+            name = dummy_tag.name
+            attr_dict = self.attribute_dict_class()
+            for k, v in dummy_tag.attrs.items():
+                attr_dict[k] = v
+        # End SoupReplacer hook 
         # print("START", name)
         sourceline: Optional[int]
         sourcepos: Optional[int]
