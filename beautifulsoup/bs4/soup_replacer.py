@@ -35,23 +35,23 @@ class SoupReplacer:
         Apply transformations in-place to a tag object during parsing.
         Called from bs4.builder._htmlparser._handle_starttag().
         """
-        # 1️⃣ Simple legacy rename
+        # 1️ Simple legacy rename
         if self.og_tag and self.alt_tag and tag.name == self.og_tag:
             tag.name = self.alt_tag
 
-        # 2️⃣ Functional name transformer
+        # 2️ Functional name transformer
         elif callable(self.name_xformer):
             new_name = self.name_xformer(tag)
             if new_name:
                 tag.name = new_name
 
-        # 3️⃣ Functional attributes transformer
+        # 3️ Functional attributes transformer
         if callable(self.attrs_xformer):
             new_attrs = self.attrs_xformer(tag)
             if isinstance(new_attrs, dict):
                 tag.attrs = new_attrs
 
-        # 4️⃣ Generic transformer with side-effects
+        # 4️ Generic transformer with side-effects
         if callable(self.xformer):
             self.xformer(tag)
 

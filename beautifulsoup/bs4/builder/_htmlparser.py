@@ -172,6 +172,7 @@ class BeautifulSoupHTMLParser(HTMLParser, DetectsXMLParsedAsHTML):
                     on_dupe(attr_dict, key, value)
             else:
                 attr_dict[key] = value
+        original_name=name
         # SoupReplacer hook (Milestone 3)
         if hasattr(self.soup, "replacer") and self.soup.replacer:
             replacer = self.soup.replacer
@@ -185,6 +186,8 @@ class BeautifulSoupHTMLParser(HTMLParser, DetectsXMLParsedAsHTML):
             attr_dict = self.attribute_dict_class()
             for k, v in dummy_tag.attrs.items():
                 attr_dict[k] = v
+            if name != original_name:   # only update when transformation changed tag
+                self.lasttag = name
         # End SoupReplacer hook 
         # print("START", name)
         sourceline: Optional[int]
@@ -224,11 +227,30 @@ class BeautifulSoupHTMLParser(HTMLParser, DetectsXMLParsedAsHTML):
            e.g. '<tag></tag>'.
         """
         # print("END", name)
+        # if check_already_closed and name in self.already_closed_empty_element:
+        #     # This is a redundant end tag for an empty-element tag.
+        #     # We've already called handle_endtag() for it, so just
+        #     # check it off the list.
+        #     # print("ALREADY CLOSED", name)
+        #     self.already_closed_empty_element.remove(name)
+        # else:
+        #     self.soup.handle_endtag(name)
+        # --- SoupReplacer hook (Milestone 3) ---
+        if hasattr(self.soup, "replacer") and self.soup.replacer:
+            dummy_tag = type("DummyTag", (), {"name": name, "attrs": {}})()
+            self.soup.replacer.transform_tag(dummy_tag)
+
+            new_name = dummy_tag.name
+
+            # If name changed, update parser state
+            if new_name != name:
+                self.lasttag = new_name
+
+            name = new_name
+        # --- End replacer hook ---
+
+        # Normal BS4 behavior
         if check_already_closed and name in self.already_closed_empty_element:
-            # This is a redundant end tag for an empty-element tag.
-            # We've already called handle_endtag() for it, so just
-            # check it off the list.
-            # print("ALREADY CLOSED", name)
             self.already_closed_empty_element.remove(name)
         else:
             self.soup.handle_endtag(name)

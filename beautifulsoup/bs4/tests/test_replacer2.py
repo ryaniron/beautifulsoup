@@ -7,6 +7,19 @@ def test_simple_replace():
     assert soup.find("b") is None
     assert len(soup.find_all("blockquote")) == 2
 
+def test_simple_mapping_multiple_tags():
+    # Test mapping multiple occurrences of <i> to <em>
+    html = "<i>one</i> <i>two</i> <i>three</i>"
+    replacer = SoupReplacer("i", "em")
+    soup = BeautifulSoup(html, "html.parser", replacer=replacer)
+
+    # Should replace all <i> with <em>
+    assert soup.find("i") is None
+
+    em_tags = soup.find_all("em")
+    assert len(em_tags) == 3
+    assert [tag.text for tag in em_tags] == ["one", "two", "three"]
+
 def test_name_xformer():
     html = "<b>Bold</b><i>Italic</i>"
     replacer = SoupReplacer(name_xformer=lambda tag: "blockquote" if tag.name == "b" else tag.name)
